@@ -25,9 +25,13 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 4.0f, 0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
+glm::vec3 cameraUp = glm::vec3(-1.0f, 0.0f, 0.0f);
+
+//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 bool firstMouse = true;
 float yaw = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
@@ -94,15 +98,30 @@ int main()
     float* vertices = cone.CreateConeVertices();
     unsigned int* indices = cone.CreateIndices();
 
+    float points[] = {
+        0.0f,2.0f,0.1f,
+        0.1f,2.0f,0.0f,
+       -0.1f,2.0f,0.0f,
+    };
+
+    glm::vec3 pointPosition[] = {
+        glm::vec3(0.3f, 0.0f,  0.3f)
+    };
+
     // world space positions of our cubes
     glm::vec3 conePositions[] = {
         glm::vec3(0.0f, 0.0f,  0.0f),
-        glm::vec3(1.0f, 0.0f, 1.0f),
+        glm::vec3(0.3f, 0.0f, 0.3f),
     };
     unsigned int VBO, VAO, EBO;
+    unsigned int VBO_point, VAO_point;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+
+    glGenVertexArrays(1, &VAO_point);
+    glGenBuffers(1, &VBO_point);
     
     glBindVertexArray(VAO);
 
@@ -115,6 +134,19 @@ int main()
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glBindVertexArray(VAO_point);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+
+    
+
 
     // render loop
     // -----------
@@ -138,29 +170,39 @@ int main()
         ourShader.use();
 
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        
+        glm::mat4 projection = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, 0.01f, 100.0f);
         ourShader.setMat4("projection", projection);
-        //projection = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, 0.01f, 100.0f);
 
         // camera/view transformation
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         ourShader.setMat4("view", view);
         
-        // render boxes
+        // render cones
         glBindVertexArray(VAO);
         for (unsigned int i = 0; i < 2; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, conePositions[i]);
-            float angle = 20.0f;
+            float angle = 0.0f;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
             ourShader.setMat4("model", model);
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             float gColor = 0.1f + i * 2.0f / 10.0f;
             ourShader.setVec4("coneColor", 0.0f, gColor, 0.0f, 1.0f);
 ;           glDrawElements(GL_TRIANGLES, 3 * numOfTriangles, GL_UNSIGNED_INT, 0);
         }
+
+        glm::mat4 model_point = glm::mat4(1.0f);
+        model_point = glm::translate(model_point, pointPosition[0]);
+        ourShader.setMat4("model", model_point);
+        ourShader.setVec4("coneColor", 0.0f, 0.0f, 0.0f, 1.0f);
+        
+        glBindVertexArray(VAO_point);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -186,7 +228,12 @@ int main()
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        std::cout << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z << std::endl;
+        std::cout << cameraFront.x << " " << cameraFront.y << " " << cameraFront.z << std::endl;
+        std::cout << cameraUp.x << " " << cameraUp.y << " " << cameraUp.z << std::endl;
         glfwSetWindowShouldClose(window, true);
+    }
 
     float cameraSpeed = static_cast<float>(2.5 * deltaTime);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
