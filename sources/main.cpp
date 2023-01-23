@@ -99,10 +99,10 @@ int main()
     unsigned int* indices = cone.CreateIndices();
 
     float squarePoints[] = {
-        0.1f,2.0f,0.1f,
-        0.1f,2.0f,-0.1f,
-       -0.1f,2.0f,-0.1f,
-        -0.1f,2.0f,0.1f
+        0.02f,2.0f,0.02f,
+        0.02f,2.0f,-0.02f,
+       -0.02f,2.0f,-0.02f,
+        -0.02f,2.0f,0.02f
     };
 
     unsigned int squarePointIndices[] =
