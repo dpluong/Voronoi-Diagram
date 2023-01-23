@@ -98,10 +98,17 @@ int main()
     float* vertices = cone.CreateConeVertices();
     unsigned int* indices = cone.CreateIndices();
 
-    float points[] = {
-        0.0f,2.0f,0.1f,
-        0.1f,2.0f,0.0f,
-       -0.1f,2.0f,0.0f,
+    float squarePoints[] = {
+        0.1f,2.0f,0.1f,
+        0.1f,2.0f,-0.1f,
+       -0.1f,2.0f,-0.1f,
+        -0.1f,2.0f,0.1f
+    };
+
+    unsigned int squarePointIndices[] =
+    {
+        0, 1, 3,
+        1, 2, 3
     };
 
     glm::vec3 pointPosition[] = {
@@ -114,15 +121,13 @@ int main()
         glm::vec3(0.3f, 0.0f, 0.3f),
     };
     unsigned int VBO, VAO, EBO;
-    unsigned int VBO_point, VAO_point;
+    unsigned int VBO_point, VAO_point, EBO_point;
 
+    //Vertex Buffer for cone
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
-    glGenVertexArrays(1, &VAO_point);
-    glGenBuffers(1, &VBO_point);
-    
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -135,10 +140,18 @@ int main()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    //Vertex Buffer for square points
+    glGenVertexArrays(1, &VAO_point);
+    glGenBuffers(1, &VBO_point);
+    glGenBuffers(1, &EBO_point);
+    
     glBindVertexArray(VAO_point);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO_point);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(squarePoints), squarePoints, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_point);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(squarePointIndices), squarePointIndices, GL_STATIC_DRAW);
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -199,9 +212,10 @@ int main()
         model_point = glm::translate(model_point, pointPosition[0]);
         ourShader.setMat4("model", model_point);
         ourShader.setVec4("coneColor", 0.0f, 0.0f, 0.0f, 1.0f);
-        
+       
         glBindVertexArray(VAO_point);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
         
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -215,6 +229,9 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO_point);
+    glDeleteBuffers(1, &VBO_point);
+   // glDeleteBuffers(1, &EBO_point);
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
